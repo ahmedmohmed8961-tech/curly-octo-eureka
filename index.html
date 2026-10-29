@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Apple of Fortune</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #0f3d2e 0%, #041a12 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .game-app {
+            width: 100%;
+            max-width: 420px;
+            height: 100vh;
+            max-height: 900px;
+            background: linear-gradient(180deg, #072a1e 0%, #03140e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            box-shadow: 0 0 25px rgba(0,0,0,0.8);
+            overflow: hidden;
+        }
+
+        /* شريط العنوان العلوي */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .balance-badge {
+            background: #11281e;
+            border: 1px solid #1f4e3b;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            padding: 4px 12px 4px 6px;
+            gap: 8px;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .plus-btn {
+            background: #2ecc71;
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .game-title {
+            text-align: center;
+            font-size: 14px;
+            letter-spacing: 2px;
+            color: #8edec0;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+
+        /* شبكة اللعبة */
+        .board-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 10px 16px;
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            opacity: 0.45;
+            transition: all 0.3s ease;
+        }
+
+        .row.active {
+            opacity: 1;
+            transform: scale(1.02);
+        }
+
+        /* مضاعف الصف (الجهة اليسرى) */
+        .multiplier {
+            width: 44px;
+            height: 22px;
+            background: #092016;
+            border: 1px solid #144933;
+            border-radius: 12px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #79a895;
+            font-weight: bold;
+        }
+
+        .row.active .multiplier {
+            background: #27ae60;
+            color: #fff;
+            border-color: #2ecc71;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
+        }
+
+        /* البراميل / الأطباق */
+        .barrel {
+            flex: 1;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #8b4513 0%, #4a2105 70%, #2b1202 100%);
+            border: 2px solid #5c2c0e;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.2), 0 4px 6px rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.15s ease, background 0.2s;
+        }
+
+        .row.active .barrel:active {
+            transform: scale(0.92);
+        }
+
+        .barrel.good {
+            background: radial-gradient(circle, #27ae60 0%, #0e4e26 100%);
+            border-color: #2ecc71;
+        }
+
+        .barrel.bad {
+            background: radial-gradient(circle, #c0392b 0%, #5c1109 100%);
+            border-color: #e74c3c;
+        }
+
+        /* لوحة التحكم والرهان السفلية */
+        .betting-panel {
+            background: #0c1c18;
+            border-top: 1px solid #16382b;
+            padding: 12px 16px 20px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .btn-sub {
+            background: #173428;
+            border: 1px solid #23513e;
+            color: #a4cebe;
+            border-radius: 8px;
+            padding: 8px 0;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .bet-input-box {
+            display: flex;
+            background: #11271f;
+            border: 1px solid #1c4535;
+            border-radius: 10px;
+            padding: 6px;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .bet-input-box input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            width: 100px;
+            outline: none;
+        }
+
+        .main-action-btn {
+            background: #2ecc71;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .main-action-btn.cashout {
+            background: #f39c12;
+        }
+
+        .limits-info {
+            font-size: 11px;
+            color: #5c8474;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-app">
+    <!-- الرأس -->
+    <div class="header">
+        <button style="background:none; border:none; color:#7ca595; font-size:18px;">✕</button>
+        <div class="balance-badge">
+            <span id="balanceDisplay">1000 ج.م</span>
+            <button class="plus-btn" onclick="addFunds()">+</button>
+        </div>
+        <button style="background:none; border:none; color:#7ca595; font-size:18px;">ℹ</button>
+    </div>
+
+    <div class="game-title">Apple of Fortune</div>
+
+    <!-- شبكة البراميل -->
+    <div class="board-container" id="board"></div>
+
+    <!-- لوحة الرهان -->
+    <div class="betting-panel">
+        <div class="quick-actions">
+            <button class="btn-sub" onclick="setQuickBet('min')">أدنى</button>
+            <button class="btn-sub" onclick="multiplyBet(2)">X2</button>
+            <button class="btn-sub" onclick="multiplyBet(0.5)">X/2</button>
+            <button class="btn-sub" onclick="setQuickBet('max')">أقصى</button>
+        </div>
+
+        <div class="bet-input-box">
+            <button id="mainBtn" class="main-action-btn" onclick="handleMainAction()">الرهان</button>
+            <div style="display:flex; align-items:center; gap:4px; padding-left:10px;">
+                <input type="number" id="betAmount" value="20" min="10" max="5000">
+                <span style="color:#7ca595; font-size:13px;">ج.م</span>
+            </div>
+        </div>
+
+        <div class="limits-info">min 10 ج.م - max 5000 ج.م</div>
+    </div>
+</div>
+
+<script>
+    // الإعدادات وقيم التضاعف من الأسفل للأعلى
+    const MULTIPLIERS = [1.23, 1.54, 1.93, 2.41, 4.02, 6.71, 11.18, 27.97, 69.93, 349.68];
+    const ROWS_COUNT = 10;
+    const COLS_COUNT = 5;
+
+    // احتمالية التفاح الفاسد تزيد كلما صعدت للأعلى
+    const BAD_APPLES_PER_ROW = [1, 1, 1, 1, 2, 2, 2, 3, 3, 4];
+
+    let userBalance = 1000;
+    let currentBet = 20;
+    let currentRowIndex = 0; // يبدأ من الصف 0 (السفلي)
+    let isGameRunning = false;
+    let rowConfigs = []; // مواقع التفاح الصالح والفاسد لكل صف
+
+    function initBoard() {
+        const board = document.getElementById('board');
+        board.innerHTML = '';
+
+        // نبني الصفوف معكوسة (الصف 9 في الأعلى والصف 0 في الأسفل)
+        for (let r = ROWS_COUNT - 1; r >= 0; r--) {
+            const rowElem = document.createElement('div');
+            rowElem.className = 'row';
+            rowElem.id = `row-${r}`;
+
+            const mult = document.createElement('div');
+            mult.className = 'multiplier';
+            mult.innerText = `x${MULTIPLIERS[r]}`;
+            rowElem.appendChild(mult);
+
+            for (let c = 0; c < COLS_COUNT; c++) {
+                const barrel = document.createElement('div');
+                barrel.className = 'barrel';
+                barrel.id = `barrel-${r}-${c}`;
+                barrel.onclick = () => handleSelect(r, c);
+                rowElem.appendChild(barrel);
+            }
+
+            board.appendChild(rowElem);
+        }
+    }
+
+    function generateGameData() {
+        rowConfigs = [];
+        for (let r = 0; r < ROWS_COUNT; r++) {
+            const badCount = BAD_APPLES_PER_ROW[r];
+            let row = Array(COLS_COUNT).fill(true); // true = تفاحة سليمة
+            let placedBad = 0;
+            while (placedBad < badCount) {
+                const randIndex = Math.floor(Math.random() * COLS_COUNT);
+                if (row[randIndex] === true) {
+                    row[randIndex] = false; // false = تفاحة فاسدة
+                    placedBad++;
+                }
+            }
+            rowConfigs.push(row);
+        }
+    }
+
+    function updateBalanceUI() {
+        document.getElementById('balanceDisplay').innerText = `${userBalance.toFixed(2)} ج.م`;
+    }
+
+    function handleMainAction() {
+        if (!isGameRunning) {
+            // بدء جولة جديدة
+            currentBet = parseFloat(document.getElementById('betAmount').value);
+            if (isNaN(currentBet) || currentBet < 10) return alert('الحد الأدنى للرهان هو 10 ج.م');
+            if (currentBet > userBalance) return alert('الرصيد غير كافٍ!');
+
+            userBalance -= currentBet;
+            updateBalanceUI();
+            startGame();
+        } else {
+            // سحب الأرباح (Cashout)
+            cashOut();
+        }
+    }
+
+    function startGame() {
+        isGameRunning = true;
+        currentRowIndex = 0;
+        generateGameData();
+        initBoard();
+
+        document.getElementById('mainBtn').innerText = 'سحب الأرباح';
+        document.getElementById('mainBtn').classList.add('cashout');
+        document.getElementById('betAmount').disabled = true;
+
+        highlightActiveRow();
+    }
+
+    function highlightActiveRow() {
+        document.querySelectorAll('.row').forEach(row => row.classList.remove('active'));
+        const activeRow = document.getElementById(`row-${currentRowIndex}`);
+        if (activeRow) {
+            activeRow.classList.add('active');
+        }
+    }
+
+    function handleSelect(rowIndex, colIndex) {
+        if (!isGameRunning || rowIndex !== currentRowIndex) return;
+
+        const isGood = rowConfigs[rowIndex][colIndex];
+        const barrel = document.getElementById(`barrel-${rowIndex}-${colIndex}`);
+
+        if (isGood) {
+            barrel.classList.add('good');
+            barrel.innerHTML = '🍏';
+
+            // حساب الأرباح الحالية وتحديث زر السحب
+            const currentWin = (currentBet * MULTIPLIERS[currentRowIndex]).toFixed(2);
+            document.getElementById('mainBtn').innerText = `سحب (${currentWin} ج.م)`;
+
+            if (currentRowIndex === ROWS_COUNT - 1) {
+                // الفوز باللعبة كاملة
+                cashOut();
+            } else {
+                currentRowIndex++;
+                highlightActiveRow();
+            }
+        } else {
+            // خسارة
+            barrel.classList.add('bad');
+            barrel.innerHTML = '🍎';
+            gameOver();
+        }
+    }
+
+    function cashOut() {
+        const payout = currentRowIndex === 0 && !document.querySelector('.barrel.good') 
+            ? currentBet 
+            : currentBet * (currentRowIndex > 0 ? MULTIPLIERS[currentRowIndex - 1] : MULTIPLIERS[0]);
+            
+        userBalance += payout;
+        updateBalanceUI();
+        alert(`مبروك! ربحت ${payout.toFixed(2)} ج.م`);
+        resetGameControls();
+    }
+
+    function gameOver() {
+        alert('تفاحة فاسدة! حظ أوفر في المرة القادمة.');
+        resetGameControls();
+    }
+
+    function resetGameControls() {
+        isGameRunning = false;
+        document.getElementById('mainBtn').innerText = 'الرهان';
+        document.getElementById('mainBtn').classList.remove('cashout');
+        document.getElementById('betAmount').disabled = false;
+        document.querySelectorAll('.row').forEach(row => row.classList.remove('active'));
+    }
+
+    /* التحكم في مبالغ الرهان */
+    function multiplyBet(factor) {
+        if (isGameRunning) return;
+        let betInput = document.getElementById('betAmount');
+        let val = Math.max(10, Math.floor(parseFloat(betInput.value) * factor));
+        betInput.value = val;
+    }
+
+    function setQuickBet(type) {
+        if (isGameRunning) return;
+        let betInput = document.getElementById('betAmount');
+        if (type === 'min') betInput.value = 10;
+        if (type === 'max') betInput.value = Math.min(userBalance, 5000);
+    }
+
+    function addFunds() {
+        userBalance += 500;
+        updateBalanceUI();
+    }
+
+    // تهيئة اللوحة عند التشغيل الأول
+    initBoard();
+</script>
+
+</body>
+</html>
